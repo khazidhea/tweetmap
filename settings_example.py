@@ -1,0 +1,2 @@
+twitterUsername = "qwe"
+twitterPassword = "asd"
