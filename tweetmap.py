@@ -58,7 +58,7 @@ def serve_static(filename):
 
 
 def get_previous_tweets():
-	geocode = '53,-8,250km'
+	geocode = '52,-9,260km'
 	rpp = 100
 	url = 'http://search.twitter.com/search.json?q=&geocode=%s&rpp=%s&result_type=recent' % (geocode, rpp)
 
