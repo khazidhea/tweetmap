@@ -1,11 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<title>Tweet map</title>
+<link rel="stylesheet" type="text/css" href="static/style.css">
 <script type="text/javascript" src="static/jquery-1.9.1.min.js"></script>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript" src="static/heatmap.js"></script>
 <script type="text/javascript" src="static/heatmap-gmaps.js"></script>
 <script type="text/javascript" src="static/ring-buffer.js"></script>
+</head>
+<body>
+	<h1>A heat map of latest tweets in Ireland.</h1>
+  <h2>First time it gets a tweet it sets it a max temperature and then slowly cools it down as it fetches more tweets.</h2>
+	<div id="heatmap" class="well"></div>
+	<ul id="tweets"></ul>
+</body>
 <script type="text/javascript">
 window.onload = function(){
   // standard gmaps initialization
@@ -35,33 +44,38 @@ window.onload = function(){
   // intitialize map
   var initial_data={ max: max_points, data: {{ data |safe }} };
   google.maps.event.addListener(map, "idle", function(){ heatmap.setDataSet(initial_data); });
+
+  var tweets = {{ tweets |safe }};
+  for (var i = 0; i < tweets.length; ++i) {
+    var tweet = tweets[i];
+    $('#tweets').append('<li>' + tweet + '</li>');
+  }
  
   // create ring buffer
- 	var ringbuf = new RingBuffer(max_points);
+  var ringbuf = new RingBuffer(max_points);
   for (var i = 0; i < initial_data['data'].length; ++i) {
     ringbuf.push(initial_data['data'][i]);
   }
- 	var reported = false;
- 	var evtSource = new EventSource("/tweets");
+  var reported = false;
+  var evtSource = new EventSource("/tweets");
     evtSource.onmessage = function(message) {
-    	var tweet = JSON.parse(message.data);
-      console.log(tweet['text']);
-    	for (var i = 0; i < ringbuf.length; ++i) {
+      var tweet = JSON.parse(message.data);
+      append_tweet(tweet);
+      for (var i = 0; i < ringbuf.length; ++i) {
         // reduce heat of all previous points
         ringbuf.get(i)['count'] -= initial_data['max'] / ringbuf.capacity;
-    	}
-    	var data_point = {lat: tweet['coordinates'][1], lng: tweet['coordinates'][0], count: max_points};
+      }
+      var data_point = {lat: tweet['coordinates'][1], lng: tweet['coordinates'][0], count: max_points};
       console.log(data_point['lat'], data_point['lng'], data_point['count']);
-    	ringbuf.push(data_point);
-    	var data={ max: max_points, data: ringbuf.get_array() };
-    	heatmap.setDataSet(data);
-	}
+      ringbuf.push(data_point);
+      var data={ max: max_points, data: ringbuf.get_array() };
+      heatmap.setDataSet(data);
+  }
+
+  function append_tweet(tweet) {
+    jQuery("#tweets li:first-child").remove();
+    $('#tweets').append('<li>' + tweet['text'] + '</li>');
+  }
 };
 </script>
-</head>
-<body>
-	<p>A heat map of latest tweets in Ireland. First time it gets a tweet it sets it a max temperature and then slowly cools it down as it fetches more tweets.</p>
-	<div id="heatmap" class="well" style="width:610px;padding:0;height:400px;position:relative;"></div>
-	<ul id="tweets"></ul>
-</body>
 </html>

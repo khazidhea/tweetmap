@@ -1,0 +1,30 @@
+body {
+	font-family:Arial, Helvetica, Sans-serif, verdana;
+	margin:0 auto;
+	width:1700px;
+}
+
+h1 {
+	font:verdana;
+	font-size:18px;
+	padding:30px 30px 0px 30px;
+	text-align:center;
+}
+
+h2 {
+	font-size:12px;
+	text-align:center;
+	padding:20px 20px 40px 20px;
+}
+
+ul {
+	float:left;
+}
+
+#heatmap {
+	float:left;
+	width:610px;
+	padding:0;
+	height:400px;
+	position:relative;
+}

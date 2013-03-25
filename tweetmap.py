@@ -62,15 +62,25 @@ def get_previous_tweets():
 	rpp = 100
 	url = 'http://search.twitter.com/search.json?q=&geocode=%s&rpp=%s&result_type=recent' % (geocode, rpp)
 
+	# FIXME
+	# This should go the other way! 
+	# First page is latest tweets, so they should be hotest
+	# Meaning they should be added last
 	page = 1
 	counter = 0;
 	json_data = requests.get(url + '&page=%s' % page).json()
 	data = []
+	tweets = []
 	while 'results' in json_data and counter <= 1000:
 		for result in json_data['results']:
 			if result['geo'] != None:
 				counter += 1
 				print result['text']
+				# FIXME
+				# should be getting LATEST 15 tweets
+				# i guess fixing the overarching problem would fix this as well
+				if len(tweets) < 15:
+					tweets.append(result['text'])
 				lat = result['geo']['coordinates'][0]
 				lng = result['geo']['coordinates'][1]
 				# cooldown previous points
@@ -80,12 +90,12 @@ def get_previous_tweets():
 		page += 1
 		json_data = requests.get(url + '&page=%s' % page).json()
 	print 'counter: %s' % counter
-	return data
+	return data, tweets
 
 @app.route('/')
 def index():
-	data = get_previous_tweets()
-	return render_template('map.html', max_points=MAX_POINTS, data=data)
+	data, tweets = get_previous_tweets()
+	return render_template('map.html', max_points=MAX_POINTS, data=data, tweets=json.dumps(tweets))
 
 if __name__ == '__main__':
 	app.run(debug=True, host='0.0.0.0')
