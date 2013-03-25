@@ -75,7 +75,6 @@ def get_previous_tweets():
 		for result in json_data['results']:
 			if result['geo'] != None:
 				counter += 1
-				print result['text']
 				# FIXME
 				# should be getting LATEST 15 tweets
 				# i guess fixing the overarching problem would fix this as well
