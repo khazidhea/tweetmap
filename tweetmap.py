@@ -1,10 +1,13 @@
 import tweetstream
 import settings
 import json
+import requests
 from flask import Flask
 from flask import Response
 from flask import send_file
+from flask import render_template
 
+MAX_POINTS = 1000
 app = Flask(__name__)
 # Ireland longtitude, latitude from south west to north east
 locations = ['-10, 51', '-6, 54']
@@ -53,11 +56,36 @@ def tweets():
 def serve_static(filename):
 	return send_file('static/' + filename)
 
+
+def get_previous_tweets():
+	geocode = '53,-8,250km'
+	rpp = 100
+	url = 'http://search.twitter.com/search.json?q=&geocode=%s&rpp=%s&result_type=recent' % (geocode, rpp)
+
+	page = 1
+	counter = 0;
+	json_data = requests.get(url + '&page=%s' % page).json()
+	data = []
+	while 'results' in json_data and counter <= 1000:
+		for result in json_data['results']:
+			if result['geo'] != None:
+				counter += 1
+				print result['text']
+				lat = result['geo']['coordinates'][0]
+				lng = result['geo']['coordinates'][1]
+				# cooldown previous points
+				for point in data:
+					point['count'] -= 1
+				data.append({'lat': lat, 'lng': lng, 'count': MAX_POINTS})
+		page += 1
+		json_data = requests.get(url + '&page=%s' % page).json()
+	print 'counter: %s' % counter
+	return data
+
 @app.route('/')
 def index():
-	return send_file('static/map.html')
-
-
+	data = get_previous_tweets()
+	return render_template('map.html', max_points=MAX_POINTS, data=data)
 
 if __name__ == '__main__':
 	app.run(debug=True, host='0.0.0.0')
